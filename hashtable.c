@@ -14,7 +14,8 @@
 
 typedef struct hashtable_item_s {
   hashtable_hash_t fullhash;
-  void *item;
+  void *key;
+  void *value;
   struct hashtable_item_s *next;
 } hashtable_item_t;
 
@@ -61,7 +62,8 @@ void hashtable_free(hashtable_t *ht) {
     this = thisHead->item.next;
     while (this) {
       next = this->next;
-      ht->free(this->item);
+      ht->free(this->key);
+      ht->free(this->value);
       free(this);
       this = next;
     }
@@ -73,19 +75,19 @@ void hashtable_free(hashtable_t *ht) {
 }
 
 
-void hashtable_insert(hashtable_t *ht, void *item) {
+void hashtable_insert(hashtable_t *ht, void *key, void *value) {
   hashtable_hash_t hash;
   size_t ph;
   hashtable_rootItem_t *rthis;
   hashtable_item_t *this, *next;
   
-  if (!item) return;
+  if (!key) return;
   
-  hash = ht->hash(item);
+  hash = ht->hash(key);
   ph = hash % ht->cbuckets;
   rthis = &(ht->buckets[ph]);
   this = &(rthis->item);
-  if (this->item) {
+  if (this->key) {
     next = calloc(1, sizeof(hashtable_item_t));
     next->next = this->next;
     this->next = next;
@@ -99,7 +101,8 @@ void hashtable_insert(hashtable_t *ht, void *item) {
   }
   
   this->fullhash = hash;
-  this->item = item;
+  this->key = key;
+  this->value = value;
 }
 
 
@@ -111,12 +114,12 @@ void *hashtable_search(hashtable_t *ht, void *key) {
   hash = ht->hash(key);
   ph = hash % ht->cbuckets;
   this = &(ht->buckets[ph].item);
-  if (!(this->item))
+  if (!(this->key))
     return NULL;
   
   do {
-    if (ht->compare(this->item, key))
-      return this->item;
+    if (ht->compare(this->key, key))
+      return this->value;
     
   } while ((this = this->next));
   return NULL;
@@ -127,24 +130,29 @@ int hashtable_remove(hashtable_t *ht, void *key) {
   hashtable_hash_t hash;
   size_t ph;
   hashtable_rootItem_t *rthis;
-  hashtable_item_t *prev, *this;
+  hashtable_item_t *prev, *this, *oldthis;
   
   hash = ht->hash(key);
   ph = hash % ht->cbuckets;
   rthis = &(ht->buckets[ph]);
   this = &(rthis->item);
-  if (!(this->item))
+  if (!(this->key))
     return 0;
   
   prev = NULL;
   do {
-    if (ht->compare(this->item, key)) {
+    if (ht->compare(this->key, key)) {
+      ht->free(this->key);
+      ht->free(this->value);
+      
       if (prev) {
         prev->next = this->next;
         free(this);
       } else {
         if (this->next) {
+          oldthis = this->next;
           *this = *(this->next);
+          free(oldthis);
         } else {
           if (!rthis->enumPrev)
             ht->enumHead = rthis->enumNext;
@@ -173,7 +181,7 @@ struct hashtable_enum_s {
   hashtable_item_t *this;
 };
 
-hashtable_enum_t *hashtable_enumerate(hashtable_enum_t *s, hashtable_t *ht, void **item) {
+hashtable_enum_t *hashtable_enumerate(hashtable_enum_t *s, hashtable_t *ht, void **key, void **value) {
   if (s == NULL) {
     if (!(ht->enumHead))
       return NULL;
@@ -182,7 +190,7 @@ hashtable_enum_t *hashtable_enumerate(hashtable_enum_t *s, hashtable_t *ht, void
     s->ht = ht;
     s->thisHead = ht->enumHead;
     s->this = &(s->thisHead->item);
-  } else if (!item) {
+  } else if (!key) {
     goto finish;
   } else {
     if (ht)
@@ -199,26 +207,30 @@ hashtable_enum_t *hashtable_enumerate(hashtable_enum_t *s, hashtable_t *ht, void
     }
   }
   
-  if (item)
-    *item = s->this->item;
+  if (key)
+    *key = s->this->key;
+  if (value)
+    *value = s->this->value;
   return s;
   
 finish:
-  if (item)
-    *item = NULL;
+  if (key)
+    *key = NULL;
+  if (value)
+    *value = NULL;
   free(s);
   return NULL;
 }
 
 
-void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *item)) {
+void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *key, void *value)) {
   hashtable_enum_t *s;
-  void *item;
+  void *key, *value;
   
-  s = hashtable_enumerate(NULL, ht, &item);
-  while (item) {
-    callback(item);
-    s = hashtable_enumerate(s, ht, &item);
+  s = hashtable_enumerate(NULL, ht, &key, &value);
+  while (s) {
+    callback(key, value);
+    s = hashtable_enumerate(s, ht, &key, &value);
   }
 }
 
