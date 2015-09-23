@@ -1,6 +1,5 @@
 //
 //  hashtable.c
-//  m68ksim
 //
 //  Created by Daniele Cattaneo on 23/04/15.
 //  Copyright (c) 2015 Daniele Cattaneo. All rights reserved.

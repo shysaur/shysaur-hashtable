@@ -1,13 +1,12 @@
 //
 //  hashtable.h
-//  m68ksim
 //
 //  Created by Daniele Cattaneo on 23/04/15.
 //  Copyright (c) 2015 Daniele Cattaneo. All rights reserved.
 //
 
-#ifndef __m68ksim__hashtable__
-#define __m68ksim__hashtable__
+#ifndef __hashtable_h__
+#define __hashtable_h__
 
 #include <stdint.h>
 
