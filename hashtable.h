@@ -19,9 +19,7 @@ typedef int (*hashtable_fcompare)(void *item, void *key);
 typedef hashtable_hash_t (*hashtable_fhash)(void *data);
 typedef void (*hashtable_ffree)(void *item);
 
-typedef struct hashtable_item_s hashtable_item_t;
 typedef struct hashtable_s hashtable_t;
-
 typedef struct hashtable_enum_s hashtable_enum_t;
 
 

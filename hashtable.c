@@ -12,11 +12,11 @@
 #include <assert.h>
 
 
-struct hashtable_item_s {
+typedef struct hashtable_item_s {
   hashtable_hash_t fullhash;
   void *item;
   struct hashtable_item_s *next;
-};
+} hashtable_item_t;
 
 struct hashtable_s {
   size_t cbuckets;
