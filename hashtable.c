@@ -9,17 +9,37 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 
-hashtable_t *hashtable_make(size_t cbuckets, fcompare f, fhash h) {
+struct hashtable_item_s {
+  hashtable_hash_t fullhash;
+  void *item;
+  struct hashtable_item_s *next;
+};
+
+struct hashtable_s {
+  size_t cbuckets;
+  hashtable_fcompare compare;
+  hashtable_fhash hash;
+  hashtable_ffree free;
+  hashtable_item_t *buckets;
+};
+
+
+hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f) {
   hashtable_t *ht;
   
-  if (!h) return NULL;
+  if (!h || !c)
+    return NULL;
+  if (cbuckets < 1)
+    cbuckets = 127;
   
   ht = calloc(1, sizeof(hashtable_t));
   ht->cbuckets = cbuckets;
-  ht->f = f;
-  ht->h = h;
+  ht->compare = c;
+  ht->hash = h;
+  ht->free = f;
   ht->buckets = calloc(cbuckets, sizeof(hashtable_item_t));
   return ht;
 }
@@ -30,73 +50,80 @@ void hashtable_free(hashtable_t *ht) {
   hashtable_item_t *this, *next;
   
   for (i=0; i<ht->cbuckets; i++) {
-    next = ht->buckets[i].next;
+    this = &(ht->buckets[i]);
+    next = this->next;
+    if (this->item && ht->free)
+      ht->free(this->item);
+      
     while (next) {
       this = next;
       next = this->next;
+      if (ht->free)
+        ht->free(this->item);
       free(this);
     }
   }
+  free(ht->buckets);
   free(ht);
 }
 
 
 void hashtable_insert(hashtable_t *ht, void *item) {
-  uint32_t hash;
+  hashtable_hash_t hash;
   size_t ph;
-  hashtable_item_t *next, *this;
+  hashtable_item_t *this, *next;
   
   if (!item) return;
   
-  hash = ht->h(item);
+  hash = ht->hash(item);
   ph = hash % ht->cbuckets;
   this = &(ht->buckets[ph]);
   if (this->item) {
     next = calloc(1, sizeof(hashtable_item_t));
-    *next = *this;
-  } else
-    next = NULL;
+    next->next = this->next;
+    this->next = next;
+    this = next;
+  }
   
   this->fullhash = hash;
   this->item = item;
-  this->next = next;
 }
 
 
-int hashtable_search(hashtable_t *ht, void *item) {
-  uint32_t hash;
+void *hashtable_search(hashtable_t *ht, void *key) {
+  hashtable_hash_t hash;
   size_t ph;
   hashtable_item_t *this;
   
-  hash = ht->h(item);
+  hash = ht->hash(key);
+  ph = hash % ht->cbuckets;
+  this = &(ht->buckets[ph]);
+  if (!(this->item))
+    return NULL;
+  
+  do {
+    if (ht->compare(this->item, key))
+      return this->item;
+    
+  } while ((this = this->next));
+  return NULL;
+}
+
+
+int hashtable_remove(hashtable_t *ht, void *key) {
+  hashtable_hash_t hash;
+  size_t ph;
+  hashtable_item_t *prev, *this;
+  
+  hash = ht->hash(key);
   ph = hash % ht->cbuckets;
   this = &(ht->buckets[ph]);
   if (!(this->item))
     return 0;
   
-  do {
-    if (this->item == item || (ht->f && ht->f(this->item, item)))
-      return 1;
-    
-  } while ((this = this->next));
-  return 0;
-}
-
-
-void hashtable_remove(hashtable_t *ht, void *item) {
-  uint32_t hash;
-  size_t ph;
-  hashtable_item_t *prev, *this;
-  
-  hash = ht->h(item);
-  ph = hash % ht->cbuckets;
-  this = &(ht->buckets[ph]);
-  if (!(this->item))
-    return;
-  
   prev = NULL;
   do {
-    if (this->item == item || (ht->f && ht->f(this->item, item))) {
+    if (ht->compare(this->item, key)) {
       if (prev) {
         prev->next = this->next;
         free(this);
@@ -106,27 +133,70 @@ void hashtable_remove(hashtable_t *ht, void *item) {
         else
           memset(this, 0, sizeof(hashtable_item_t));
       }
-      return;
+      return 1;
     }
     
     prev = this;
     this = this->next;
   } while (this);
+  
+  return 0;
 }
 
 
-void hashtable_enumerate(hashtable_t *ht, void (*callback)(void *item)) {
-  size_t i;
+struct hashtable_enum_s {
+  hashtable_t *ht;
+  ssize_t i;
   hashtable_item_t *this;
+};
+
+hashtable_enum_t *hashtable_enumerate(hashtable_enum_t *s, hashtable_t *ht, void **item) {
+  if (s == NULL) {
+    s = calloc(1, sizeof(hashtable_enum_t));
+    s->ht = ht;
+    s->i = -1;
+  }
+  if (!item)
+    goto finish;
+    
+  if (ht)
+    assert(ht == s->ht);
+  else
+    ht = s->ht;
   
-  for (i=0; i<ht->cbuckets; i++) {
-    if (ht->buckets[i].item) {
-      this = &(ht->buckets[i]);
-      while (this) {
-        callback(this->item);
-        this = this->next;
-      }
+  if (s->this)
+    s->this = s->this->next;
+    
+  if (!(s->this)) {
+    for (s->i++; s->i < ht->cbuckets; s->i++) {
+      if (ht->buckets[s->i].item)
+        break;
     }
+    if (s->i >= ht->cbuckets)
+      goto finish;
+    s->this = &(ht->buckets[s->i]);
+  }
+  
+  if (item)
+    *item = s->this->item;
+  return s;
+  
+finish:
+  if (item)
+    *item = NULL;
+  free(s);
+  return NULL;
+}
+
+
+void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *item)) {
+  hashtable_enum_t *s;
+  void *item;
+  
+  s = hashtable_enumerate(NULL, ht, &item);
+  while (item) {
+    callback(item);
+    s = hashtable_enumerate(s, ht, &item);
   }
 }
 
