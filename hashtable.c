@@ -31,7 +31,7 @@ struct hashtable_s {
   hashtable_fhash hash;
   hashtable_ffree free;
   hashtable_rootItem_t *enumHead;
-  hashtable_rootItem_t *buckets;
+  hashtable_rootItem_t buckets[1];  /* buckets are trailing */
 };
 
 
@@ -43,12 +43,11 @@ hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fha
   if (cbuckets < 1)
     cbuckets = 127;
   
-  ht = calloc(1, sizeof(hashtable_t));
+  ht = calloc(1, sizeof(hashtable_t) + sizeof(hashtable_rootItem_t) * (cbuckets - 1));
   ht->cbuckets = cbuckets;
   ht->compare = c;
   ht->hash = h;
   ht->free = f;
-  ht->buckets = calloc(cbuckets, sizeof(hashtable_item_t));
   return ht;
 }
 
@@ -70,7 +69,6 @@ void hashtable_free(hashtable_t *ht) {
     thisHead = thisHead->enumNext;
   }
   
-  free(ht->buckets);
   free(ht);
 }
 
