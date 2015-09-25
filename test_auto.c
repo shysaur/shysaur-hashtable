@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   
   ht = autoHashtable_make(0, mt_compare, mt_hash, free);
   for (;;) {
-    printf("Mode? 1:query/insert 2:remove 3:enum");
+    printf("Mode? 1:query/insert 2:remove 3:enum ");
     gets(key);
     if (key[0] == '1') {
     
