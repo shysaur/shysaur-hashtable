@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
   timeThis();
   
   if (insertcnt != freecnt) {
-    printf("Something's wrong. %d %d", insertcnt, freecnt);
+    printf("Something's wrong. %d %d\n", insertcnt, freecnt);
   }
 
   printf("Insertion 2... ");
