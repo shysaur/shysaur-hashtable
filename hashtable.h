@@ -34,4 +34,19 @@ hashtable_enum_t *hashtable_enumerate(hashtable_enum_t *s, hashtable_t *ht, void
 void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *item, void *value));
 
 
+
+typedef struct autoHashtable_s autoHashtable_t;
+
+
+autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f);
+void autoHashtable_free (autoHashtable_t *hashtable);
+
+void autoHashtable_insert(autoHashtable_t *ht, void *key, void *value);
+void *autoHashtable_search(autoHashtable_t *ht, void *key);
+int autoHashtable_remove(autoHashtable_t *ht, void *key);
+
+hashtable_enum_t *autoHashtable_enumerate(hashtable_enum_t *s, autoHashtable_t *ht, void **key, void **value);
+void autoHashtable_enumWithCallback(autoHashtable_t *ht, void (*callback)(void *item, void *value));
+
+
 #endif

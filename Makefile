@@ -13,15 +13,21 @@ OBJ	= $(patsubst %, $(OBJDIR)/%, $(_SOURCE:.c=.o))
 .PHONY:	all
 .PHONY:	clean
 
-all:	$(OBJDIR) test measure measure_maptable
+all:	$(OBJDIR) test test_auto measure measure_auto measure_maptable
 
 $(OBJDIR):	
 	mkdir -p $(OBJDIR)
 
 test:	$(OBJ) $(OBJDIR)/test.o
 	$(CC) -o $@ $^ $(CFLAGS)
+	
+test_auto:	$(OBJ) $(OBJDIR)/test_auto.o
+	$(CC) -o $@ $^ $(CFLAGS)
 
 measure:	$(OBJ) $(OBJDIR)/measure.o
+	$(CC) -o $@ $^ $(CFLAGS)
+	
+measure_auto:	$(OBJ) $(OBJDIR)/measure_auto.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
 measure_maptable:	$(OBJ) $(OBJDIR)/measure_maptable.o
@@ -34,4 +40,5 @@ $(OBJDIR)/%.o:	%.m $(DEPS)
 	$(CC) -c -o $@ $< $(OBJCFLAGS)
 
 clean:
-	rm -f $(OBJDIR)/*.o test measure measure_maptable
+	rm -f $(OBJDIR)/*.o test measure measure_maptable measure_auto \
+	test_auto

@@ -12,6 +12,9 @@
 #include <assert.h>
 
 
+#pragma mark - Core Hashtable
+
+
 typedef struct hashtable_item_s {
   hashtable_hash_t fullhash;
   void *key;
@@ -112,7 +115,7 @@ void hashtable_insert(hashtable_t *ht, void *key, void *value) {
 }
 
 
-void *hashtable_search(hashtable_t *ht, void *key) {
+hashtable_item_t *hashtable_entrySearch(hashtable_t *ht, void *key) {
   hashtable_hash_t hash;
   size_t ph;
   hashtable_item_t *this;
@@ -125,10 +128,18 @@ void *hashtable_search(hashtable_t *ht, void *key) {
   
   do {
     if (this->fullhash == hash && ht->compare(this->key, key))
-      return this->value;
+      return this;
     
   } while ((this = this->next));
   return NULL;
+}
+
+
+void *hashtable_search(hashtable_t *ht, void *key) {
+  hashtable_item_t *tmp;
+  
+  tmp = hashtable_entrySearch(ht, key);
+  return tmp ? tmp->value : NULL;
 }
 
 
@@ -243,6 +254,154 @@ void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *key, voi
   }
 }
 
+
+#pragma mark - Autoresizing Hashtable
+
+
+struct autoHashtable_s {
+  hashtable_t *newer;
+  hashtable_t *older;
+};
+
+
+autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f) {
+  autoHashtable_t *res;
+  
+  if (!suggest)
+    suggest = 17;
+    
+  res = calloc(1, sizeof(autoHashtable_t));
+  res->newer = hashtable_make(suggest, c, h, f);
+  if (!res->newer) {
+    free(res);
+    return NULL;
+  }
+  return res;
+}
+
+
+void autoHashtable_free(autoHashtable_t *ht) {
+  hashtable_ffree tmp;
+  
+  tmp = ht->newer->free;
+  hashtable_free(ht->newer);
+  if (ht->older) {
+    ht->older->free = tmp;
+    hashtable_free(ht->older);
+  }
+  free(ht);
+}
+
+
+hashtable_t *autoHashtable_newBackingStore(hashtable_t *older) {
+  hashtable_t *newer;
+  size_t newsize;
+  
+  newsize = older->cbuckets * 0x19E / 0x100;
+  newer = hashtable_make(newsize, older->compare, older->hash, older->free);
+  older->free = NULL;
+  return newer;
+}
+
+
+void autoHashtable_hardResize(autoHashtable_t *ht) {
+  size_t newsize;
+  hashtable_enum_t *s;
+  void *key, *value;
+  
+  if (!ht->older) {
+    ht->older = ht->newer;
+    ht->newer = autoHashtable_newBackingStore(ht->older);
+  }
+  
+  s = hashtable_enumerate(NULL, ht->older, &key, &value);
+  while (s) {
+    hashtable_insert(ht->newer, key, value);
+    s = hashtable_enumerate(s, ht->older, &key, &value);
+  }
+  hashtable_free(ht->older);
+  ht->older = NULL;
+}
+
+
+void autoHashtable_softResize(autoHashtable_t *ht) {
+  size_t newsize;
+
+  if (ht->older)
+    autoHashtable_hardResize(ht);
+    
+  ht->older = ht->newer;
+  ht->newer = autoHashtable_newBackingStore(ht->older);
+}
+
+
+void autoHashtable_insert(autoHashtable_t *ht, void *key, void *value) {
+  if (ht->newer->centries * 10 / ht->newer->cbuckets > 7)
+    autoHashtable_softResize(ht);
+  hashtable_insert(ht->newer, key, value);
+}
+
+
+void *autoHashtable_search(autoHashtable_t *ht, void *key) {
+  hashtable_item_t *item;
+  void *value;
+  
+  item = hashtable_entrySearch(ht->newer, key);
+  if (item)
+    return item->value;
+  if (!ht->older)
+    return NULL;
+    
+  item = hashtable_entrySearch(ht->older, key);
+  if (item) {
+    hashtable_insert(ht->newer, item->key, item->value);
+    value = item->value;
+    hashtable_remove(ht->older, key);
+    return value;
+  }
+  return NULL;
+}
+
+
+int autoHashtable_remove(autoHashtable_t *ht, void *key) {
+  int res;
+  
+  res = hashtable_remove(ht->newer, key);
+  if (res || !ht->older)
+    return res;
+
+  ht->older->free = ht->newer->free;    
+  res = hashtable_remove(ht->older, key);
+  ht->older->free = NULL;
+  return res;
+}
+
+
+hashtable_enum_t *autoHashtable_enumerate(hashtable_enum_t *s, autoHashtable_t *ht, void **key, void **value) {
+  hashtable_t *cht;
+  
+  if (!s)
+    return hashtable_enumerate(NULL, ht->newer, key, value);
+    
+  cht = s->ht;
+  if (!(s = hashtable_enumerate(s, NULL, key, value))) {
+    if (key && cht == ht->newer && ht->older)
+      s = hashtable_enumerate(s, ht->older, key, value);
+  }
+  return s;
+}
+
+
+void autoHashtable_enumWithCallback(autoHashtable_t *ht, void (*callback)(void *item, void *value)) {
+  hashtable_enum_t *s;
+  void *key, *value;
+  
+  s = autoHashtable_enumerate(NULL, ht, &key, &value);
+  while (s) {
+    callback(key, value);
+    s = autoHashtable_enumerate(s, ht, &key, &value);
+  }
+}
 
 
 
