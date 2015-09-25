@@ -297,7 +297,7 @@ hashtable_t *autoHashtable_newBackingStore(hashtable_t *older) {
   hashtable_t *newer;
   size_t newsize;
   
-  newsize = older->cbuckets * 0x19E / 0x100;
+  newsize = (older->cbuckets * 0x19E + 0x80) / 0x100;
   newer = hashtable_make(newsize, older->compare, older->hash, older->free);
   older->free = NULL;
   return newer;
