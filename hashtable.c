@@ -27,6 +27,7 @@ typedef struct hashtable_rootItem_s {
 
 struct hashtable_s {
   size_t cbuckets;
+  size_t centries;
   hashtable_fcompare compare;
   hashtable_fhash hash;
   hashtable_ffree free;
@@ -101,6 +102,7 @@ void hashtable_insert(hashtable_t *ht, void *key, void *value) {
   this->fullhash = hash;
   this->key = key;
   this->value = value;
+  ht->centries++;
 }
 
 
@@ -140,6 +142,7 @@ int hashtable_remove(hashtable_t *ht, void *key) {
   prev = NULL;
   do {
     if (ht->compare(this->key, key)) {
+      ht->centries--;
       ht->free(this->key);
       ht->free(this->value);
       
