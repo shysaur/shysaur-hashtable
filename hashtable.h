@@ -24,7 +24,7 @@ typedef struct hashtable_enum_s hashtable_enum_t;
 
 
 hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f);
-void hashtable_free (hashtable_t *hashtable);
+void hashtable_free(hashtable_t *hashtable);
 
 void hashtable_insert(hashtable_t *ht, void *key, void *value);
 void *hashtable_search(hashtable_t *ht, void *key);

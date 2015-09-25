@@ -59,13 +59,17 @@ void hashtable_free(hashtable_t *ht) {
   
   thisHead = ht->enumHead;
   while (thisHead) {
-    ht->free(thisHead->item.key);
-    ht->free(thisHead->item.value);
+    if (ht->free) {
+      ht->free(thisHead->item.key);
+      ht->free(thisHead->item.value);
+    }
     this = thisHead->item.next;
     while (this) {
       next = this->next;
-      ht->free(this->key);
-      ht->free(this->value);
+      if (ht->free) {
+        ht->free(this->key);
+        ht->free(this->value);
+      }
       free(this);
       this = next;
     }
@@ -145,8 +149,10 @@ int hashtable_remove(hashtable_t *ht, void *key) {
   do {
     if (this->fullhash == hash && ht->compare(this->key, key)) {
       ht->centries--;
-      ht->free(this->key);
-      ht->free(this->value);
+      if (ht->free) {
+        ht->free(this->key);
+        ht->free(this->value);
+      }
       
       if (prev) {
         prev->next = this->next;
