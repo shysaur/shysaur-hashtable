@@ -59,6 +59,8 @@ void hashtable_free(hashtable_t *ht) {
   
   thisHead = ht->enumHead;
   while (thisHead) {
+    ht->free(thisHead->item.key);
+    ht->free(thisHead->item.value);
     this = thisHead->item.next;
     while (this) {
       next = this->next;
