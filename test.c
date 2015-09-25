@@ -7,11 +7,22 @@
 
 hashtable_hash_t mt_hash(void *data) {
   char *x;
-  int l;
+  int l, i;
+  hashtable_hash_t res;
   
   x = (char*)data;
   l = strlen(x);
-  return x[0] + x[1]*0x100 + x[2]*0x10000 + x[3]*0x1000000 + l * 0x100000000;
+  
+  if (l >= 4) {
+    return x[0] + x[1]*0x100 + x[l-1]*0x10000 + x[l-2]*0x1000000 + l * 0x100000000;
+  } else {
+    res = l;
+    while (l) {
+      res = res * 0x100 + x[l-1];
+      l--;
+    }
+    return res+1;
+  }
 }
 
 
