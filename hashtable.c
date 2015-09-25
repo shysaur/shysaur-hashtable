@@ -83,15 +83,11 @@ void hashtable_free(hashtable_t *ht) {
 }
 
 
-void hashtable_insert(hashtable_t *ht, void *key, void *value) {
-  hashtable_hash_t hash;
+void hashtable_entryInsert(hashtable_t *ht, void *key, void *value, hashtable_hash_t hash) {
   size_t ph;
   hashtable_rootItem_t *rthis;
   hashtable_item_t *this, *next;
   
-  if (!key) return;
-  
-  hash = ht->hash(key);
   ph = hash % ht->cbuckets;
   rthis = &(ht->buckets[ph]);
   this = &(rthis->item);
@@ -112,6 +108,12 @@ void hashtable_insert(hashtable_t *ht, void *key, void *value) {
   this->key = key;
   this->value = value;
   ht->centries++;
+}
+
+
+void hashtable_insert(hashtable_t *ht, void *key, void *value) {
+  if (!key) return;
+  hashtable_entryInsert(ht, key, value, ht->hash(key));
 }
 
 
@@ -316,7 +318,7 @@ void autoHashtable_hardResize(autoHashtable_t *ht) {
   
   s = hashtable_enumerate(NULL, ht->older, &key, &value);
   while (s) {
-    hashtable_insert(ht->newer, key, value);
+    hashtable_entryInsert(ht->newer, key, value, s->this->fullhash);
     s = hashtable_enumerate(s, ht->older, &key, &value);
   }
   hashtable_free(ht->older);
@@ -354,7 +356,7 @@ void *autoHashtable_search(autoHashtable_t *ht, void *key) {
     
   item = hashtable_entrySearch(ht->older, key);
   if (item) {
-    hashtable_insert(ht->newer, item->key, item->value);
+    hashtable_entryInsert(ht->newer, item->key, item->value, item->fullhash);
     value = item->value;
     hashtable_remove(ht->older, key);
     return value;
