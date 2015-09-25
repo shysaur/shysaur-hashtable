@@ -2,3 +2,4 @@ test
 *.dSYM
 measure
 measure_maptable
+obj
