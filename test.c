@@ -39,8 +39,12 @@ int main(int argc, char *argv[]) {
   hashtable_t *ht;
   char key[80], value[80];
   char *res, *res2;
+  int tmp;
   
-  ht = hashtable_make(0, mt_compare, mt_hash, free);
+  printf("Sizing suggestion? ");
+  gets(value);
+  sscanf(value, "%d", &tmp);
+  ht = hashtable_make(tmp, mt_compare, mt_hash, free);
   for (;;) {
     printf("Mode? 1:query/insert 2:remove 3:enum ");
     gets(key);
