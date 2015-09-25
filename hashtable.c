@@ -120,7 +120,7 @@ void *hashtable_search(hashtable_t *ht, void *key) {
     return NULL;
   
   do {
-    if (ht->compare(this->key, key))
+    if (this->fullhash == hash && ht->compare(this->key, key))
       return this->value;
     
   } while ((this = this->next));
@@ -143,7 +143,7 @@ int hashtable_remove(hashtable_t *ht, void *key) {
   
   prev = NULL;
   do {
-    if (ht->compare(this->key, key)) {
+    if (this->fullhash == hash && ht->compare(this->key, key)) {
       ht->centries--;
       ht->free(this->key);
       ht->free(this->value);
@@ -236,5 +236,7 @@ void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *key, voi
     s = hashtable_enumerate(s, ht, &key, &value);
   }
 }
+
+
 
 
