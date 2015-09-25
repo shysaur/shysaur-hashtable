@@ -22,7 +22,7 @@ int mt_compare(void *data, void *key) {
 
 
 void mt_free(void *key) {
-  if (key != NULL)
+  if (key != (void*)1)
     freecnt++;
 }
 
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
   for (i=0; i<insertcnt; i++) {
     void *a;
     a = (void*)rand();
-    hashtable_insert(ht, a, NULL);
+    hashtable_insert(ht, a, (void*)1);
   }
   timeThis();
   
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
   for (i=0; i<insertcnt; i++) {
     void *a;
     a = (void*)rand();
-    hashtable_insert(ht, a, NULL);
+    hashtable_insert(ht, a, (void*)1);
   }
   timeThis();
   

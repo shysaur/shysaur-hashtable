@@ -22,7 +22,7 @@ BOOL mt_compare(NSMapTable *mt, const void *data, const void *key) {
 
 
 void mt_free(NSMapTable *mt, void *key) {
-  if (key != NULL)
+  if (key != (void*)1)
     freecnt++;
 }
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
   for (i=0; i<insertcnt; i++) {
     void *a;
     a = (void*)rand();
-    NSMapInsert(ht, a, NULL);
+    NSMapInsert(ht, a, (void*)1);
   }
   timeThis();
   
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
   for (i=0; i<insertcnt; i++) {
     void *a;
     a = (void*)rand();
-    NSMapInsert(ht, a, NULL);
+    NSMapInsert(ht, a, (void*)1);
   }
   timeThis();
   
