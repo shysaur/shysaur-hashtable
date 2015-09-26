@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   printf("Sizing suggestion? ");
   gets(value);
   sscanf(value, "%d", &tmp);
-  ht = autoHashtable_make(tmp, mt_compare, mt_hash, free);
+  ht = autoHashtable_make(tmp, mt_compare, mt_hash, free, free);
   for (;;) {
     printf("Mode? 1:query/insert 2:remove 3:enum ");
     gets(key);

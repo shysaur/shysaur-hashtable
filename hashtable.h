@@ -23,7 +23,7 @@ typedef struct hashtable_s hashtable_t;
 typedef struct hashtable_enum_s hashtable_enum_t;
 
 
-hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f);
+hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree kf, hashtable_ffree vf);
 void hashtable_free(hashtable_t *hashtable);
 
 void hashtable_insert(hashtable_t *ht, void *key, void *value);
@@ -38,7 +38,7 @@ void hashtable_enumWithCallback(hashtable_t *ht, void (*callback)(void *item, vo
 typedef struct autoHashtable_s autoHashtable_t;
 
 
-autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f);
+autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree kf, hashtable_ffree vf);
 void autoHashtable_free (autoHashtable_t *hashtable);
 
 void autoHashtable_insert(autoHashtable_t *ht, void *key, void *value);

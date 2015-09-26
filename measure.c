@@ -22,8 +22,7 @@ int mt_compare(void *data, void *key) {
 
 
 void mt_free(void *key) {
-  if (key != (void*)1)
-    freecnt++;
+  freecnt++;
 }
 
 
@@ -55,7 +54,7 @@ int main(int argc, char *argv[]) {
   scanf("%d", &insertcnt);
   printf("Bucket count? ");
   scanf("%d", &cbuckets);
-  ht = hashtable_make(cbuckets, mt_compare, mt_hash, mt_free);
+  ht = hashtable_make(cbuckets, mt_compare, mt_hash, mt_free, NULL);
   
   printf("Control... ");
   timeThis();

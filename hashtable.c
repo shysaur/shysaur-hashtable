@@ -33,13 +33,19 @@ struct hashtable_s {
   size_t centries;
   hashtable_fcompare compare;
   hashtable_fhash hash;
-  hashtable_ffree free;
+  hashtable_ffree kfree;
+  hashtable_ffree vfree;
   hashtable_rootItem_t *enumHead;
   hashtable_rootItem_t buckets[1];  /* buckets are trailing */
 };
 
 
-hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f) {
+void hashtable_nullFree(void *o) {
+  return;
+}
+
+
+hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree kf, hashtable_ffree vf) {
   hashtable_t *ht;
   
   if (!h || !c)
@@ -51,7 +57,8 @@ hashtable_t *hashtable_make(size_t cbuckets, hashtable_fcompare c, hashtable_fha
   ht->cbuckets = cbuckets;
   ht->compare = c;
   ht->hash = h;
-  ht->free = f;
+  ht->kfree = kf ? kf : hashtable_nullFree;
+  ht->vfree = vf ? vf : hashtable_nullFree;
   return ht;
 }
 
@@ -62,17 +69,13 @@ void hashtable_free(hashtable_t *ht) {
   
   thisHead = ht->enumHead;
   while (thisHead) {
-    if (ht->free) {
-      ht->free(thisHead->item.key);
-      ht->free(thisHead->item.value);
-    }
+    ht->kfree(thisHead->item.key);
+    ht->vfree(thisHead->item.value);
     this = thisHead->item.next;
     while (this) {
       next = this->next;
-      if (ht->free) {
-        ht->free(this->key);
-        ht->free(this->value);
-      }
+      ht->kfree(this->key);
+      ht->vfree(this->value);
       free(this);
       this = next;
     }
@@ -162,10 +165,8 @@ int hashtable_remove(hashtable_t *ht, void *key) {
   do {
     if (this->fullhash == hash && ht->compare(this->key, key)) {
       ht->centries--;
-      if (ht->free) {
-        ht->free(this->key);
-        ht->free(this->value);
-      }
+      ht->kfree(this->key);
+      ht->vfree(this->value);
       
       if (prev) {
         prev->next = this->next;
@@ -266,14 +267,14 @@ struct autoHashtable_s {
 };
 
 
-autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree f) {
+autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashtable_fhash h, hashtable_ffree kf, hashtable_ffree vf) {
   autoHashtable_t *res;
   
   if (!suggest)
     suggest = 17;
     
   res = calloc(1, sizeof(autoHashtable_t));
-  res->newer = hashtable_make(suggest, c, h, f);
+  res->newer = hashtable_make(suggest, c, h, kf, vf);
   if (!res->newer) {
     free(res);
     return NULL;
@@ -283,12 +284,15 @@ autoHashtable_t *autoHashtable_make(size_t suggest, hashtable_fcompare c, hashta
 
 
 void autoHashtable_free(autoHashtable_t *ht) {
-  hashtable_ffree tmp;
+  hashtable_ffree kf, vf;
   
-  tmp = ht->newer->free;
+  kf = ht->newer->kfree;
+  vf = ht->newer->vfree;
+  
   hashtable_free(ht->newer);
   if (ht->older) {
-    ht->older->free = tmp;
+    ht->older->kfree = kf;
+    ht->older->vfree = vf;
     hashtable_free(ht->older);
   }
   free(ht);
@@ -300,8 +304,9 @@ hashtable_t *autoHashtable_newBackingStore(hashtable_t *older) {
   size_t newsize;
   
   newsize = (older->cbuckets * 0x19E + 0x80) / 0x100;
-  newer = hashtable_make(newsize, older->compare, older->hash, older->free);
-  older->free = NULL;
+  newer = hashtable_make(newsize, older->compare, older->hash, older->kfree, older->vfree);
+  older->kfree = hashtable_nullFree;
+  older->vfree = hashtable_nullFree;
   return newer;
 }
 
@@ -372,9 +377,11 @@ int autoHashtable_remove(autoHashtable_t *ht, void *key) {
   if (res || !ht->older)
     return res;
 
-  ht->older->free = ht->newer->free;    
+  ht->older->kfree = ht->newer->kfree;   
+  ht->older->vfree = ht->newer->vfree; 
   res = hashtable_remove(ht->older, key);
-  ht->older->free = NULL;
+  ht->older->kfree = hashtable_nullFree;
+  ht->older->vfree = hashtable_nullFree;
   return res;
 }
 
