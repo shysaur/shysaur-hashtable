@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
   freecnt = 0;
   printf("Free... ");
   timeThis();
-  objc_release(ht);
+  [ht release];
   timeThis();
   
   if (insertcnt != freecnt) {
