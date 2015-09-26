@@ -364,6 +364,10 @@ void *autoHashtable_search(autoHashtable_t *ht, void *key) {
     hashtable_entryInsert(ht->newer, item->key, item->value, item->fullhash);
     value = item->value;
     hashtable_remove(ht->older, key);
+    if (!ht->older->centries) {
+      hashtable_free(ht->older);
+      ht->older = NULL;
+    }
     return value;
   }
   return NULL;
@@ -380,8 +384,13 @@ int autoHashtable_remove(autoHashtable_t *ht, void *key) {
   ht->older->kfree = ht->newer->kfree;   
   ht->older->vfree = ht->newer->vfree; 
   res = hashtable_remove(ht->older, key);
-  ht->older->kfree = hashtable_nullFree;
-  ht->older->vfree = hashtable_nullFree;
+  if (!ht->older->centries) {
+    hashtable_free(ht->older);
+    ht->older = NULL;
+  } else {
+    ht->older->kfree = hashtable_nullFree;
+    ht->older->vfree = hashtable_nullFree;
+  }
   return res;
 }
 
