@@ -1,5 +1,6 @@
 
 #include <Foundation/Foundation.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,9 +81,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    void *a;
-    a = (void*)rand();
-    NSMapInsert(ht, a, (void*)1);
+    NSMapInsert(ht, (void*)((intptr_t)rand()), (void*)1);
   }
   timeThis();
   
@@ -90,9 +89,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    void *a;
-    a = (void*)rand();
-    NSMapGet(ht, a);
+    NSMapGet(ht, (void*)((intptr_t)rand()));
   }
   timeThis();
   
@@ -107,7 +104,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    NSMapRemove(ht, (void*)rand());
+    NSMapRemove(ht, (void*)((intptr_t)rand()));
   }
   timeThis();
   
@@ -120,9 +117,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    void *a;
-    a = (void*)rand();
-    NSMapInsert(ht, a, (void*)1);
+    NSMapInsert(ht, (void*)((intptr_t)rand()), (void*)1);
   }
   timeThis();
   

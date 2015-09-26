@@ -1,5 +1,6 @@
 
 #include "hashtable.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,9 +66,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    void *a;
-    a = (void*)rand();
-    autoHashtable_insert(ht, a, (void*)1);
+    autoHashtable_insert(ht, (void*)((intptr_t)rand()), (void*)1);
   }
   timeThis();
   
@@ -76,9 +75,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    void *a;
-    a = (void*)rand();
-    autoHashtable_search(ht, a);
+    autoHashtable_search(ht, (void*)((intptr_t)rand()));
   }
   timeThis();
   
@@ -98,7 +95,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    autoHashtable_remove(ht, (void*)rand());
+    autoHashtable_remove(ht, (void*)((intptr_t)rand()));
   }
   timeThis();
   
@@ -111,9 +108,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    void *a;
-    a = (void*)rand();
-    autoHashtable_insert(ht, a, (void*)1);
+    autoHashtable_insert(ht, (void*)((intptr_t)rand()), (void*)1);
   }
   timeThis();
   
