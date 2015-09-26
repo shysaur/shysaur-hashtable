@@ -22,32 +22,23 @@ BOOL mt_compare(NSMapTable *mt, const void *data, const void *key) {
 
 
 void mt_free(NSMapTable *mt, void *key) {
-  if (key != (void*)1)
-    freecnt++;
-}
-
-
-void mt_retain(NSMapTable *mt, void *key) {}
-
-
-NSString *mt_describe(NSMapTable *mt, const void *key) {
-  return @"";
+  freecnt++;
 }
 
 
 const NSMapTableKeyCallBacks mt_keyCallbacks = {
   &mt_hash,
   &mt_compare,
-  &mt_retain,
+  NULL,
   &mt_free,
-  &mt_describe,
+  NULL,
   NULL
 };
 
 const NSMapTableValueCallBacks mt_valueCallbacks = {
-  &mt_retain,
-  &mt_retain,
-  &mt_describe
+  NULL,
+  NULL,
+  NULL
 };
 
 
