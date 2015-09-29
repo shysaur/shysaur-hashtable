@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mach/mach_time.h>
 #include <assert.h>
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#elif _WIN32
+#include <windows.h>
+#endif
 
 
 int freecnt = 0;
@@ -28,7 +32,8 @@ void mt_free(void *key) {
 
 
 void timeThis(void) {
-  static uint64_t stime, etime;
+#ifdef __APPLE__
+  static uint64_t stime=0, etime;
   mach_timebase_info_data_t info;
   uint64_t diff, titm;
   
@@ -42,6 +47,25 @@ void timeThis(void) {
   } else {
     stime = mach_absolute_time();
   }
+#elif _WIN32
+  static LONGLONG stime=0, etime;
+  LONGLONG freq;
+  uint64_t tmp1, tmp2, diff, titm;
+  
+  if (stime) {
+    QueryPerformanceCounter((LARGE_INTEGER*)&etime);
+    QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+    diff = etime - stime;
+    tmp1 = (diff * 1000000) / freq;
+    tmp2 = ((diff * 1000000) % freq) * 1000 / freq;
+    diff = tmp1 * 1000 + tmp2;
+    titm = (diff * 100) / insertcnt;
+    printf("Time spent: %lld (per item %lld.%lld) ns\n", diff, titm / 100, titm % 100);
+    stime = etime = 0;
+  } else {
+    QueryPerformanceCounter((LARGE_INTEGER*)&stime);
+  }
+#endif
 }
 
 
