@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    hashtable_insert(ht, (void*)((intptr_t)rand()), (void*)1);
+    hashtable_insert(ht, (void*)((intptr_t)rand()+1), (void*)1);
   }
   timeThis();
   
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    hashtable_search(ht, (void*)((intptr_t)rand()));
+    hashtable_search(ht, (void*)((intptr_t)rand()+1));
   }
   timeThis();
   
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    hashtable_remove(ht, (void*)((intptr_t)rand()));
+    hashtable_remove(ht, (void*)((intptr_t)rand()+1));
   }
   timeThis();
   
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    hashtable_insert(ht, (void*)((intptr_t)rand()), (void*)1);
+    hashtable_insert(ht, (void*)((intptr_t)rand()+1), (void*)1);
   }
   timeThis();
   

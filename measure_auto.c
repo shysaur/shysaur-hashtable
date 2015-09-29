@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    autoHashtable_insert(ht, (void*)((intptr_t)rand()), (void*)1);
+    autoHashtable_insert(ht, (void*)((intptr_t)rand()+1), (void*)1);
   }
   timeThis();
   
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    autoHashtable_search(ht, (void*)((intptr_t)rand()));
+    autoHashtable_search(ht, (void*)((intptr_t)rand()+1));
   }
   timeThis();
   
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    autoHashtable_remove(ht, (void*)((intptr_t)rand()));
+    autoHashtable_remove(ht, (void*)((intptr_t)rand()+1));
   }
   timeThis();
   
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
   srand(insertcnt);
   timeThis();
   for (i=0; i<insertcnt; i++) {
-    autoHashtable_insert(ht, (void*)((intptr_t)rand()), (void*)1);
+    autoHashtable_insert(ht, (void*)((intptr_t)rand()+1), (void*)1);
   }
   timeThis();
   
