@@ -13,7 +13,7 @@ int insertcnt;
 
 
 hashtable_hash_t mt_hash(void *data) {
-  return (hashtable_hash_t)data;
+  return (hashtable_hash_t)((intptr_t)data);
 }
 
 

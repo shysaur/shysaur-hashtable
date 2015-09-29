@@ -13,7 +13,7 @@ int insertcnt;
 
 
 NSUInteger mt_hash(NSMapTable *mt, const void *data) {
-  return (unsigned)data;
+  return (NSUInteger)((uintptr_t)data);
 }
 
 
