@@ -331,7 +331,6 @@ hashtable_t *autoHashtable_newBackingStore(hashtable_t *older) {
 
 
 void autoHashtable_hardResize(autoHashtable_t *ht) {
-  size_t newsize;
   hashtable_enum_t *s;
   void *key, *value;
   
@@ -351,8 +350,6 @@ void autoHashtable_hardResize(autoHashtable_t *ht) {
 
 
 void autoHashtable_softResize(autoHashtable_t *ht) {
-  size_t newsize;
-
   if (ht->older)
     autoHashtable_hardResize(ht);
     
