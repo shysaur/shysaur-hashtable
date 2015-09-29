@@ -30,8 +30,13 @@ measure:	$(OBJ) $(OBJDIR)/measure.o
 measure_auto:	$(OBJ) $(OBJDIR)/measure_auto.o
 	$(CC) -o $@ $^ $(CFLAGS)
 
+ifeq ($(shell uname -s),Darwin)
 measure_maptable:	$(OBJ) $(OBJDIR)/measure_maptable.o
 	$(CC) -framework Foundation -o $@ $^ $(OBJCFLAGS)
+else
+.PHONY:	measure_maptable
+measure_maptable:
+endif
 
 $(OBJDIR)/%.o:	%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
