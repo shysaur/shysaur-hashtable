@@ -9,6 +9,8 @@
 #include <mach/mach_time.h>
 #elif _WIN32
 #include <windows.h>
+#elif __linux__
+#include <time.h>
 #endif
 
 
@@ -64,6 +66,23 @@ void timeThis(void) {
     stime = etime = 0;
   } else {
     QueryPerformanceCounter((LARGE_INTEGER*)&stime);
+  }
+#elif __linux__
+  static struct timespec stime, etime;
+  static int started = 0;
+  uint64_t t0, t1, diff, titm;
+
+  if (started) {
+    clock_gettime(CLOCK_MONOTONIC_RAW, &etime);
+    t0 = stime.tv_nsec + stime.tv_sec * 1000000000;
+    t1 = etime.tv_nsec + etime.tv_sec * 1000000000;
+    diff = t1 - t0;
+    titm = (diff * 100) / insertcnt;
+    printf("Time spent: %lld (per item %lld.%lld) ns\n", diff, titm / 100, titm % 100);
+    started = 0;
+  } else {
+    started = 1;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &stime);
   }
 #endif
 }
